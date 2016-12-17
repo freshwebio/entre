@@ -1,8 +1,8 @@
 # entre
 Another one of those Go Middleware libraries
 
-The purpose of entre is to provide a lightweight middleware solution which works nicely with commonly
-used routers both ways.
+The purpose of entre is to provide a lightweight middleware solution which works nicely both ways with
+httprouter as well as a range of other routers that simply use the core go http.Handler pattern.
 
 There are other middleware libraries which are pretty great in terms of what you can throw their way with adapters
 for handlers implementing generic http.Handler interface.
