@@ -93,7 +93,7 @@ in order to pass the correct httprouter.Params object through the chain to the f
 You can run your core web server from entre like the following:
 ``` go
 router := httprouter.New()
-e := entre.Basic()
+e := entre.Bundled()
 e.PushHandler(router)
 e.Serve(":8383")
 ```
