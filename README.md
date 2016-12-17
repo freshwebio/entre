@@ -46,12 +46,6 @@ import "github.com/freshwio/entre"
 You can use entre to provide middleware stacks for specific routes, route groups (where router provides route grouping) or to be used
 as the top level middleware for an application's core router.
 
-### Top level middleware stack
-
-### Specific routes or route groups
-
-### Built-in support for httprouter
-
 You can use most handlers accepted by most go routers as a handler within an entre stack instance
 as with other middleware libraries.
 
@@ -114,6 +108,27 @@ with the default middleware like so:
 e := entre.Bundled()
 ```
 ### Logging
+This middleware deals with logging incoming requests and their responses.
+Example usage:
+``` go
+package main
+
+func main() {
+  router := httprouter.New()
+  router.GET("/:entity", func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+    fmt.Fprintf(w, "This is entity %s", ps.ByName("entity"))
+  })
+  e := entre.New()
+  e.Push(entre.NewLogger())
+  e.PushHandler(router)
+  e.Serve(":8283")
+}
+```
+This will then print logs that will look something like the following:
+```go
+|-entre-| Began GET /my-entity
+|-entre-| Completed with 200 OK response in 234.653µs
+```
 ### Basic Authentication
 ### Panic recovery
 ## Further support
