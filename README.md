@@ -105,7 +105,17 @@ http.ListenAndServe(":3000", e)
 Entre comes with three built-in middleware items, you can set up an entre stack
 with the default middleware like so:
 ``` go
-e := entre.Bundled()
+e := entre.Bundled(false, "user", "password")
+```
+The Bundled() method requires you provide three parameters:
+- Whether or not the panic recovery middleware should print the stack trace to the response.
+- The username for basic authentication.
+- The password for basic authentication.
+
+You can also use the simpler utility method to create a new entre stack with just the logger
+and panic recovery middleware (defaults to print stack trace) without any parameters like so:
+``` go
+e := entre.Basic()
 ```
 ### Logging
 This middleware deals with logging incoming requests and their responses.
