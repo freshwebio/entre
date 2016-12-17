@@ -109,9 +109,18 @@ e := entre.Bundled()
 ```
 ### Logging
 This middleware deals with logging incoming requests and their responses.
+
 Example usage:
 ``` go
 package main
+
+import (
+  "fmt"
+  "net/http"
+
+  "github.com/freshwebio/entre"
+  "github.com/julienschmidt/httprouter"
+)
 
 func main() {
   router := httprouter.New()
@@ -130,7 +139,62 @@ This will then print logs that will look something like the following:
 |-entre-| Completed with 200 OK response in 234.653µs
 ```
 ### Basic Authentication
+This middleware deals with providing basic authentication through
+the use of the Authorization header.
+
+Example usage:
+``` go
+package main
+
+import (
+  "fmt"
+  "net/http"
+
+  "github.com/freshwebio/entre"
+  "github.com/julienschmidt/httprouter"
+)
+
+func main() {
+  user := "user"
+  password := "password"
+  router := httprouter.New()
+  router.GET("/:entity", func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+    fmt.Fprintf(w, "This is entity %s", ps.ByName("entity"))
+  })
+  e := entre.New()
+  e.Push(entre.NewBasicAuth(user, password))
+  e.PushHandler(router)
+  e.Serve(":8283")
+}
+```
 ### Panic recovery
+This middleware deals with catching panics and produces a response with 500 status code.
+In the case other middleware may have written a response code or body that will take precedence
+over the response provided by the recovery middleware.
+
+Example usage:
+``` go
+package main
+
+import (
+  "fmt"
+  "net/http"
+
+  "github.com/freshwebio/entre"
+  "github.com/julienschmidt/httprouter"
+)
+
+func main() {
+  router := httprouter.New()
+  router.GET("/:entity", func(w http.ResponseWriter, req *http.Request, ps httprouter.Params) {
+    fmt.Fprintf(w, "This is entity %s", ps.ByName("entity"))
+  })
+  e := entre.New()
+  e.Push(entre.NewPanicRecovery())
+  e.PushHandler(router)
+  e.Serve(":8283")
+}
+```
 ## Further support
 So far the implementation of entre will support most routers.
 Special adaptation was needed to integrate with the httprouter package both ways.
