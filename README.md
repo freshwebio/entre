@@ -125,7 +125,7 @@ func main() {
 }
 ```
 This will then print logs that will look something like the following:
-```go
+```
 |-entre-| Began GET /my-entity
 |-entre-| Completed with 200 OK response in 234.653µs
 ```
