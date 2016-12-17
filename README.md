@@ -9,13 +9,21 @@ for handlers implementing generic http.Handler interface.
 
 For instance:
 ``` go
-middleman.New(Middleware1, Middleware2, middleman.UseHandler(myHandler))
+func myHandler(w http.ResponseWriter, r *http.Request) {
+  // Do handling here
+}
+
+middleman.New(Middleware1, Middleware2, middleman.UseHandler(http.HandlerFunc(myHandler)))
 ```
 
 Though none that I've come across work well with providing a the middleware object as a handler for a router which expects handlers of a different shape from the http.Handler interface.
 
 For instance:
 ``` go
+func myHandler(w http.ResponseWriter, r *http.Request, ctx mypkg.Context, params mypkg.Params) {
+  // Do the handling here
+}
+
 mwHandler := middleman.New(Middleware1, Middleware2, middleman.UseMyRouterHandler(myHandler))
 myRouter.Get("/entity/", mwHandler.AsMyRouterHandler())
 ```
@@ -55,7 +63,7 @@ func myHttpHandler(w http.ResponseWriter, r *http.Request) {
   // Do handling here
 }
 
-e := entre.New(Middleware1, Middleware2, entre.UseHandler(myHttpHandler))
+e := entre.New(Middleware1, Middleware2, entre.UseHandler(HandlerFunc(myHttpHandler)))
 router.Handler("POST", "/entity/", e)
 ```
 
@@ -66,6 +74,8 @@ Entre provides built-in support to provide a middleware stack as a httprouter.Ha
 retain and pass the httprouter.Params object through to the final handler in the chain.
 
 ``` go
+router := httprouter.New()
+
 func myHttpRouterHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
   // Do handling here
 }
@@ -80,8 +90,32 @@ in order to pass the correct httprouter.Params object through the chain to the f
 
 ## Serving your app with entre
 
-## Bundled middleware
+You can run your core web server from entre like the following:
+``` go
+router := httprouter.New()
+e := entre.Basic()
+e.PushHandler(router)
+e.Serve(":8383")
+```
 
+Or you could simply use entre as the main handler like the following:
+``` go
+router := httprouter.New()
+e := entre.Bundled()
+e.PushHandler(router)
+http.ListenAndServe(":3000", e)
+```
+## Bundled middleware
+Entre comes with three built-in middleware items, you can set up an entre stack
+with the default middleware like so:
+``` go
+e := entre.Bundled()
+```
 ### Logging
 ### Basic Authentication
 ### Panic recovery
+## Further support
+So far the implementation of entre will support most routers.
+Special adaptation was needed to integrate with the httprouter package both ways.
+If there is a router that takes a handler with a different shape from that of the standard http.Handler
+and you think entre should support create an issue on the repository.
