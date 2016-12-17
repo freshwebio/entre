@@ -33,7 +33,52 @@ import "github.com/freshwio/entre"
 
 ## Handlers
 
-## Running entre
+You can use entre to provide middleware stacks for specific routes, route groups (where router provides route grouping) or to be used
+as the top level middleware for an application's core router.
+
+### Top level middleware stack
+
+### Specific routes or route groups
+
+### Built-in support for httprouter
+
+You can use most handlers accepted by most go routers as a handler within an entre stack instance
+as with other middleware libraries.
+
+Entre supports and provides an adapter for 2 main different types of handlers.
+
+The first being the go core library http.Handler
+``` go
+router := httprouter.New()
+
+func myHttpHandler(w http.ResponseWriter, r *http.Request) {
+  // Do handling here
+}
+
+e := entre.New(Middleware1, Middleware2, entre.UseHandler(myHttpHandler))
+router.Handler("POST", "/entity/", e)
+```
+
+The second being the httprouter.Handle type which is simply a function which takes an extra parameter
+than that of the core http.Handler ServeHTTP function.
+
+Entre provides built-in support to provide a middleware stack as a httprouter.Handle handler in order to
+retain and pass the httprouter.Params object through to the final handler in the chain.
+
+``` go
+func myHttpRouterHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+  // Do handling here
+}
+
+e := entre.New(Middleware1, Middleware2, entre.UseHTTPRouterHandler(myHttpRouterHandler))
+router.POST("/entity/", e.ForHTTPRouter())
+```
+
+In the above providing the final handler using the UseHTTPRouterHandler wrapper method
+and the ForHTTPRouter method in providing the entre stack as a httprouter handler are both needed
+in order to pass the correct httprouter.Params object through the chain to the final handler.
+
+## Serving your app with entre
 
 ## Bundled middleware
 
