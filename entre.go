@@ -1,7 +1,9 @@
 package entre
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -13,20 +15,45 @@ type Entre struct {
 	mw       middleware
 }
 
-// Use takes a handler and adds it to the handler list.
-func (e *Entre) Use(h Handler) {
+// New deals with creating a new Entre with the provided middleware.
+func New(mw ...Handler) *Entre {
+	e := &Entre{}
+	e.handlers = mw
+	e.mw = build(e.handlers)
+	return e
+}
+
+// Push takes a handler and adds it to the handler list.
+func (e *Entre) Push(h Handler) {
 	if h == nil {
 		panic("A valid handler must be provided, not nil")
 	}
-	e.handlers = append(e.handlers, handler)
+	e.handlers = append(e.handlers, h)
 	e.mw = build(e.handlers)
 }
 
-func New(mw ...Handler) *Entre {
-	return &Entre{}
+// PushFunc adds a handler function of the entre handler type
+// to the stack of middleware.
+func (e *Entre) PushFunc(hf func(http.ResponseWriter, *http.Request, httprouter.Params, http.HandlerFunc)) {
+	e.Push(HandlerFunc(hf))
 }
 
-func (e *Entre) Run() {
+// PushHandler adds a http.Handler to the stack of middleware.
+func (e *Entre) PushHandler(h http.Handler) {
+	e.Push(UseHandler(h))
+}
+
+// PushHandlerFunc adds a http.HandlerFunc based handler on to our stack of middleware.
+func (e *Entre) PushHandlerFunc(hf func(http.ResponseWriter, *http.Request)) {
+	e.Push(UseHandler(http.HandlerFunc(hf)))
+}
+
+// Serve deals with setting up with the web server
+// to listen to the provided port.
+func (e *Entre) Serve(addr string) {
+	l := log.New(os.Stdout, "|-entre-|", 0)
+	l.Printf("listening on %s", addr)
+	l.Fatal(http.ListenAndServe(addr, e))
 }
 
 // ServeHTTP deals with invoking the entre middleware chain
@@ -126,12 +153,12 @@ func build(handlers []Handler) middleware {
 	} else {
 		next = terminalMiddleware()
 	}
-	return middleware{handlers[0], &next}
+	return middleware{handlers[0], &next, httprouter.Params{}}
 }
 
 func terminalMiddleware() middleware {
 	return middleware{
-		HandlerFunc(func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {}),
-		&middleware{},
+		handler: HandlerFunc(func(rw http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {}),
+		next:    &middleware{nil, nil, httprouter.Params{}},
 	}
 }
