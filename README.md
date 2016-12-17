@@ -118,4 +118,4 @@ e := entre.Bundled()
 So far the implementation of entre will support most routers.
 Special adaptation was needed to integrate with the httprouter package both ways.
 If there is a router that takes a handler with a different shape from that of the standard http.Handler
-and you think entre should support create an issue on the repository.
+and you think entre should support it, create an issue on the repository.
