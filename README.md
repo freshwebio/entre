@@ -1,5 +1,6 @@
 # entre
 [![GoDoc](https://godoc.org/github.com/freshwebio/entre?status.svg)](http://godoc.org/github.com/freshwebio/entre)
+
 Another one of those Go Middleware libraries
 
 The purpose of entre is to provide a lightweight middleware solution which works nicely both ways with
