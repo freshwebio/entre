@@ -23,6 +23,13 @@ myRouter.Get("/entity/", mwHandler.AsMyRouterHandler())
 That's where entre comes in to play.
 
 ## Installing entre
+```
+go get github.com/freshwebio/entre
+```
+To use this package use:
+```
+import "github.com/freshwio/entre"
+```
 
 ## Handlers
 
