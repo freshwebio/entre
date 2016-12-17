@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 // LoggerIface provides a minimal interface with our middleware logger
@@ -24,7 +26,7 @@ func NewLogger() *Logger {
 	return &Logger{log.New(os.Stdout, "|-entre-|", 0)}
 }
 
-func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {
 	startTime := time.Now()
 	l.Printf("Began %s %s", r.Method, r.URL.Path)
 	next(w, r)

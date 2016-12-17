@@ -23,6 +23,27 @@ func New(mw ...Handler) *Entre {
 	return e
 }
 
+// Bundled creates a new entre middleware stack from the bundled middleware.
+func Bundled(printStack bool, user string, pass string) *Entre {
+	e := &Entre{}
+	e.handlers = append(e.handlers, NewLogger())
+	e.handlers = append(e.handlers, NewBasicAuth(user, pass))
+	e.handlers = append(e.handlers, NewPanicRecovery(printStack))
+	e.mw = build(e.handlers)
+	return e
+}
+
+// Basic create a new entre middleware stack from the bundled middleware
+// taking no parameters. This produces a stack with a logging middleware
+// and a panic recovery middleware which prints the panic stack trace to the response.
+func Basic() *Entre {
+	e := &Entre{}
+	e.handlers = append(e.handlers, NewLogger())
+	e.handlers = append(e.handlers, NewPanicRecovery(true))
+	e.mw = build(e.handlers)
+	return e
+}
+
 // Push takes a handler and adds it to the handler list.
 func (e *Entre) Push(h Handler) {
 	if h == nil {
