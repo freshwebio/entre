@@ -72,7 +72,7 @@ func (e *Entre) PushHandlerFunc(hf func(http.ResponseWriter, *http.Request)) {
 // Serve deals with setting up with the web server
 // to listen to the provided port.
 func (e *Entre) Serve(addr string) {
-	l := log.New(os.Stdout, "|-entre-|", 0)
+	l := log.New(os.Stdout, "|-entre-| ", 0)
 	l.Printf("listening on %s", addr)
 	l.Fatal(http.ListenAndServe(addr, e))
 }

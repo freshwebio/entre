@@ -30,6 +30,6 @@ func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter
 	startTime := time.Now()
 	l.Printf("Began %s %s", r.Method, r.URL.Path)
 	next(w, r)
-	resp := w.(Response)
+	resp := NewResponse(w)
 	l.Printf("Completed with %v %s response in %v", resp.Status(), http.StatusText(resp.Status()), time.Since(startTime))
 }
