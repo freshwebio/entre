@@ -190,7 +190,8 @@ func main() {
     fmt.Fprintf(w, "This is entity %s", ps.ByName("entity"))
   })
   e := entre.New()
-  e.Push(entre.NewPanicRecovery())
+  // Provide true to print the stack trace of the panic to the response or false otherwise.
+  e.Push(entre.NewPanicRecovery(true))
   e.PushHandler(router)
   e.Serve(":8283")
 }
