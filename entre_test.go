@@ -10,15 +10,15 @@ import (
 )
 
 /* Test Helpers */
-func expect(t *testing.T, a interface{}, b interface{}) {
-	if a != b {
-		t.Errorf("Expected %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+func expect(t *testing.T, result interface{}, expected interface{}) {
+	if expected != result {
+		t.Errorf("Expected %v (type %v) - Got %v (type %v)", expected, reflect.TypeOf(expected), result, reflect.TypeOf(result))
 	}
 }
 
-func refute(t *testing.T, a interface{}, b interface{}) {
-	if a == b {
-		t.Errorf("Did not expect %v (type %v) - Got %v (type %v)", b, reflect.TypeOf(b), a, reflect.TypeOf(a))
+func refute(t *testing.T, result interface{}, notExpected interface{}) {
+	if notExpected == result {
+		t.Errorf("Did not expect %v (type %v) - Got %v (type %v)", notExpected, reflect.TypeOf(notExpected), result, reflect.TypeOf(result))
 	}
 }
 
@@ -29,15 +29,25 @@ func Test_Handlers(t *testing.T) {
 	handlers := e.handlers
 	expect(t, 0, len(handlers))
 	e.Push(HandlerFunc(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusBadRequest)
 	}))
-	// Expect the new length of handlers to be 1 with the new handler we
+
+	nextHandlerFunc := NextHandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		w.Write([]byte("This is content from the NextHandlerFunc"))
+	})
+	e.Push(UseNextHandlerFunc(nextHandlerFunc))
+
+	// Expect the new length of handlers to be 2 with the new handler we
 	// have just added.
 	handlers = e.handlers
-	expect(t, 1, len(handlers))
-	// Make sure our first handler is working as expected.
+	expect(t, len(handlers), 2)
+	// Make sure our handlers is working as expected.
 	handlers[0].ServeHTTP(resp, (*http.Request)(nil), httprouter.Params{}, nil)
-	expect(t, resp.Code, http.StatusOK)
+	// NextHandlerFunc handlers require a next handler in testing as will be called due
+	// to it not being a direct entre handler.
+	handlers[1].ServeHTTP(resp, (*http.Request)(nil), httprouter.Params{}, func(w http.ResponseWriter, r *http.Request) {})
+	expect(t, resp.Code, http.StatusBadRequest)
+	expect(t, string(resp.Body.Bytes()), "This is content from the NextHandlerFunc")
 }
 
 func Test_EntreServeHTTP(t *testing.T) {

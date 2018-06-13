@@ -110,11 +110,19 @@ type Handler interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request, params httprouter.Params, next http.HandlerFunc)
 }
 
-// HandlerFunc provides the definition
+// HandlerFunc provides the definition for a handler function.
 type HandlerFunc func(http.ResponseWriter, *http.Request, httprouter.Params, http.HandlerFunc)
 
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {
 	h(w, r, ps, next)
+}
+
+// NextHandlerFunc provides the definition for a handler function which does not make use of httprouter.Params,
+// this is for middleware components built for other routers that have include a reference to the next handler in the chain.
+type NextHandlerFunc func(http.ResponseWriter, *http.Request, http.HandlerFunc)
+
+func (h NextHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	h(w, r, next)
 }
 
 // UseHandler provides a way to wrap a http.Handler in an entre.Handler to be used
@@ -122,6 +130,15 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request, ps httpro
 func UseHandler(h http.Handler) Handler {
 	return HandlerFunc(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {
 		h.ServeHTTP(w, r)
+		next(w, r)
+	})
+}
+
+// UseNextHandlerFunc allows us to use a handler which allows calling of the next handler in the chain without
+// the expectation of router params.
+func UseNextHandlerFunc(h NextHandlerFunc) Handler {
+	return HandlerFunc(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params, next http.HandlerFunc) {
+		h.ServeHTTP(w, r, next)
 		next(w, r)
 	})
 }
