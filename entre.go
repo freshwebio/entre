@@ -124,6 +124,11 @@ type NextHandlerFunc func(http.ResponseWriter, *http.Request, http.HandlerFunc)
 func (h NextHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	h(w, r, next)
 }
+// NextHandler provides the definition for a handler that is not coupled with the httprouter package
+// but allows us to make use of middleware primarily written for libraries like negroni.
+type NextHandler interface {
+	ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+}
 
 // UseHandler provides a way to wrap a http.Handler in an entre.Handler to be used
 // as middleware.
@@ -141,6 +146,11 @@ func UseNextHandlerFunc(h NextHandlerFunc) Handler {
 		h.ServeHTTP(w, r, next)
 		next(w, r)
 	})
+}
+
+// UseNextHandler allows entre to take handlers with a next argument.
+func UseNextHandler(h NextHandler) Handler {
+	return UseNextHandlerFunc(h.ServeHTTP)
 }
 
 // UseHTTPRouterHandler wraps a httprouter handler so it can be used as the part

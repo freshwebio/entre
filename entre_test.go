@@ -22,6 +22,13 @@ func refute(t *testing.T, result interface{}, notExpected interface{}) {
 	}
 }
 
+type testNextHandler struct{}
+
+func (h *testNextHandler) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	w.Header().Set("X-Test-Handler-Key", "testhandlervalue")
+	next(w, r)
+}
+
 // Ensure our entre middleware chain correctly returns all of its handlers.
 func Test_Handlers(t *testing.T) {
 	resp := httptest.NewRecorder()
@@ -37,17 +44,24 @@ func Test_Handlers(t *testing.T) {
 	})
 	e.Push(UseNextHandlerFunc(nextHandlerFunc))
 
+	nextHandler := &testNextHandler{}
+	e.Push(UseNextHandler(nextHandler))
+
 	// Expect the new length of handlers to be 2 with the new handler we
 	// have just added.
 	handlers = e.handlers
-	expect(t, len(handlers), 2)
-	// Make sure our handlers is working as expected.
+	expect(t, len(handlers), 3)
+	// Make sure our handlers are working as expected.
 	handlers[0].ServeHTTP(resp, (*http.Request)(nil), httprouter.Params{}, nil)
 	// NextHandlerFunc handlers require a next handler in testing as will be called due
 	// to it not being a direct entre handler.
 	handlers[1].ServeHTTP(resp, (*http.Request)(nil), httprouter.Params{}, func(w http.ResponseWriter, r *http.Request) {})
 	expect(t, resp.Code, http.StatusBadRequest)
 	expect(t, string(resp.Body.Bytes()), "This is content from the NextHandlerFunc")
+
+	// Now for the NextHandler middleware.
+	handlers[2].ServeHTTP(resp, (*http.Request)(nil), httprouter.Params{}, func(w http.ResponseWriter, r *http.Request) {})
+	expect(t, resp.Header().Get("X-Test-Handler-Key"), "testhandlervalue")
 }
 
 func Test_EntreServeHTTP(t *testing.T) {
